@@ -35,34 +35,42 @@ const MainChat = () => {
   };
 
   const handleCreateChat = async (e) => {
+   
     e.preventDefault();
     const token = localStorage.getItem('Token');
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_URL}/getUserId`, { username }, {
-      headers: {"Content-Type": 'application/json', "Authorization": `Bearer ${token}` }
-    });
-    const { userId } = response.data;
-    setId2(userId);
-    if (userId === user?.id) {
-      alert("You cannot create a chat with yourself!");
-      return;
-    }
-    setIsLoading(true);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_URL}/getUserId`, { username }, {
+        headers: { "Content-Type": 'application/json', "Authorization": `Bearer ${token}` }
+      });
+      const {userId} = response.data;
+      setId2(userId);
+      if (userId === user?.id) {
+        alert("You cannot create a chat with yourself!");
+        return;
+      }
+      setIsLoading(true);
+    
+
+
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_URL}/createchat`, { id2:userId }, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_URL}/createchat`, { id2: userId }, {
         headers: { "Content-Type": 'application/json', "Authorization": `Bearer ${token}` }
       });
       const { chat, user2 } = response.data;
-      console.log({chat});
-      console.log({user2});
-      
+      console.log({ chat });
+      console.log({ user2 });
       setChat(chat);
       setUser2(user2);
       setId2('');
       setUsername('');
       toast.success('Chat created successfully!');
-    } catch (error) {
+    }
+    catch (error) {
+      console.log(error);
+
       toast.error(error.response?.data?.message || 'Failed to create chat');
     } finally {
+      setId2('');
+      setUsername('');
       setIsLoading(false);
     }
   };
@@ -106,11 +114,11 @@ const MainChat = () => {
   const handleChatClick = async (e, chat) => {
     e.preventDefault();
     setChat(chat);
-    if(chat.userTwo.username!==user.username){
+    if (chat.userTwo.username !== user.username) {
 
       setUser2(chat.userTwo);
     }
-    else{
+    else {
       setUser2(chat.userOne);
 
     }
@@ -239,7 +247,7 @@ const MainChat = () => {
                 {chat.userTwo.username === user?.username ? chat.userOne.username : chat.userTwo.username}
               </span>
               {/* <div>{(async()=>{return await getLastMessage(chat.id)})()}</div> */}
-            </div>  
+            </div>
           ))}
         </div>
       </div>
@@ -248,7 +256,7 @@ const MainChat = () => {
         {/* Chat Header */}
         <div className="bg-primary px-6 py-4 flex justify-between items-center">
           <span className="text-text-light text-lg font-medium">
-            {chat ? ((user2.username)): 'Select a chat'}
+            {chat ? ((user2.username)) : 'Select a chat'}
           </span>
           {user2 && (
             <button
@@ -280,7 +288,7 @@ const MainChat = () => {
         <form onSubmit={handleSendMessage} className="p-4 bg-surface-light border-t border-background-dark/10">
           <div className="flex gap-3">
             <input
-            ref={inputRef}
+              ref={inputRef}
               type="text"
               value={content}
               onChange={(e) => setContent(e.target.value)}
