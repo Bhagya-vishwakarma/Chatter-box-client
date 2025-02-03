@@ -16,6 +16,7 @@ const MainChat = () => {
   const [copied, setCopied] = useState(false);
   const [user2Copied, setuser2Copied] = useState(false);
   const [chatMessages, setChatMessages] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
 
   const handleCopyUsername = async () => {
@@ -63,6 +64,9 @@ const MainChat = () => {
       setId2('');
       setUsername('');
       toast.success('Chat created successfully!');
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      }
     }
     catch (error) {
       console.log(error);
@@ -115,12 +119,13 @@ const MainChat = () => {
     e.preventDefault();
     setChat(chat);
     if (chat.userTwo.username !== user.username) {
-
       setUser2(chat.userTwo);
     }
     else {
       setUser2(chat.userOne);
-
+    }
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
     }
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -165,12 +170,9 @@ const MainChat = () => {
           headers: { "Authorization": `Bearer ${token}` }
         });
         setChats(response.data.chats);
-
-
       }
     };
     fetchchats();
-
   }, [user2]);
 
   //  messages fetch
@@ -183,22 +185,26 @@ const MainChat = () => {
     return () => clearInterval(polling);
   }, [chat, handleSendMessage]);
 
-
-
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-
-
   return (
-    <div className="flex h-screen bg-background-light">
+    <div className="flex h-screen bg-background-light relative">
       {/* Sidebar */}
-      <div className="w-1/4 bg-secondary p-6 flex flex-col gap-6">
-        <h2 className="text-3xl font-bold text-primary tracking-wider">ChatterBox</h2>
+      <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-1/3 lg:w-1/4 bg-secondary p-4 md:p-6 absolute md:relative z-10 h-full`}>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary tracking-wider">ChatterBox</h2>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="md:hidden text-text-light p-2 hover:bg-secondary-hover rounded-lg"
+          >
+            ✕
+          </button>
+        </div>
 
         {/* User Profile Card */}
         {user && (
-          <div className="bg-surface-dark p-4 rounded-2xl shadow-lg border-2 border-primary">
+          <div className="bg-surface-dark p-4 rounded-2xl shadow-lg border-2 border-primary mb-6">
             <p className="text-text-light text-lg font-medium mb-3">
               Welcome, {user.username}!
             </p>
@@ -216,8 +222,8 @@ const MainChat = () => {
         )}
 
         {/* New Chat Form */}
-        <form onSubmit={handleCreateChat} className="space-y-4">
-          <div className="flex gap-2">
+        <form onSubmit={handleCreateChat} className="space-y-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               placeholder="Friend's username"
@@ -228,7 +234,7 @@ const MainChat = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-primary hover:bg-primary-hover active:scale-95 text-text-light py-3 px-6 rounded-2xl font-semibold shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto bg-primary hover:bg-primary-hover active:scale-95 text-text-light py-3 px-6 rounded-2xl font-semibold shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? '...' : 'Chat'}
             </button>
@@ -246,34 +252,43 @@ const MainChat = () => {
               <span className="text-text-light text-lg font-medium">
                 {chat.userTwo.username === user?.username ? chat.userOne.username : chat.userTwo.username}
               </span>
-              {/* <div>{(async()=>{return await getLastMessage(chat.id)})()}</div> */}
             </div>
           ))}
         </div>
       </div>
+
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Chat Header */}
-        <div className="bg-primary px-6 py-4 flex justify-between items-center">
-          <span className="text-text-light text-lg font-medium">
-            {chat ? ((user2.username)) : 'Select a chat'}
-          </span>
+        <div className="bg-primary px-4 md:px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsSidebarOpen(true)} 
+              className="md:hidden text-text-light p-2 hover:bg-primary-hover rounded-lg"
+            >
+              ☰
+            </button>
+            <span className="text-text-light text-lg font-medium">
+              {chat ? ((user2.username)) : 'Select a chat'}
+            </span>
+          </div>
           {user2 && (
             <button
               onClick={() => handleCopyUser2Name(user2.username)}
               className="flex items-center gap-2 text-text-light hover:bg-primary-hover px-4 py-2 rounded-lg transition-all"
             >
-              <span>Copy username</span>
+              <span className="hidden sm:inline">Copy username</span>
               {user2Copied ? <ClipboardCheck className="text-primary" /> : <Clipboard className="text-text-light" />}
             </button>
           )}
         </div>
+
         {/* Messages Area */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+        <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4">
           {chatMessages?.map((msg, index) => (
             <div key={index} className={`flex ${msg.senderId === user?.id ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[70%] p-4 rounded-2xl ${msg.senderId === user?.id
+                className={`max-w-[85%] sm:max-w-[70%] p-4 rounded-2xl ${msg.senderId === user?.id
                   ? 'bg-primary text-text-light rounded-tr-none'
                   : 'bg-surface-light text-text-dark rounded-tl-none'
                   }`}
@@ -284,20 +299,21 @@ const MainChat = () => {
           ))}
           <div ref={messagesEndRef} />
         </div>
+
         {/* Message Input */}
-        <form onSubmit={handleSendMessage} className="p-4 bg-surface-light border-t border-background-dark/10">
-          <div className="flex gap-3">
+        <form onSubmit={handleSendMessage} className="p-3 md:p-4 bg-surface-light border-t border-background-dark/10">
+          <div className="flex gap-2 md:gap-3">
             <input
               ref={inputRef}
               type="text"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Type your message..."
-              className="flex-1 bg-background-light px-6 py-3 rounded-full focus:ring-2 focus:ring-primary outline-none transition-all text-text-dark"
+              className="flex-1 bg-background-light px-4 md:px-6 py-3 rounded-full focus:ring-2 focus:ring-primary outline-none transition-all text-text-dark"
             />
             <button
               type="submit"
-              className="bg-primary hover:bg-primary-hover text-text-light px-6 py-3 rounded-full font-medium transition-all"
+              className="bg-primary hover:bg-primary-hover text-text-light px-4 md:px-6 py-3 rounded-full font-medium transition-all"
             >
               Send
             </button>
